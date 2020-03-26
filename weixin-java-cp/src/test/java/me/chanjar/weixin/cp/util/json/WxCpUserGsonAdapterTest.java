@@ -1,8 +1,7 @@
 package me.chanjar.weixin.cp.util.json;
 
-import org.testng.annotations.*;
-
 import me.chanjar.weixin.cp.bean.WxCpUser;
+import org.testng.annotations.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,6 +31,7 @@ public class WxCpUserGsonAdapterTest {
       "    \"isleader\": 1,\n" +
       "    \"avatar\": \"http://wx.qlogo.cn/mmopen/ajNVdqHZLLA3WJ6DSZUfiakYe37PKnQhBIeOQBO4czqrnZDS79FH5Wm5m4X69TBicnHFlhiafvDwklOpZeXYQQ2icg/0\",\n" +
       "    \"telephone\": \"020-123456\",\n" +
+      "    \"address\": \"广州市海珠区新港中路\"," +
       "    \"enable\": 1,\n" +
       "    \"alias\": \"jackzhang\",\n" +
       "    \"extattr\": {\n" +
@@ -76,6 +76,14 @@ public class WxCpUserGsonAdapterTest {
 
     final WxCpUser user = WxCpUser.fromJson(userJson);
     assertThat(user).isNotNull();
+
+    assertThat(user.getOrders()).isNotEmpty();
+    assertThat(user.getOrders().length).isEqualTo(2);
+    assertThat(user.getOrders()[0]).isEqualTo(1);
+    assertThat(user.getOrders()[1]).isEqualTo(2);
+
+    assertThat(user.getAddress()).isEqualTo("广州市海珠区新港中路");
+    assertThat(user.getAlias()).isEqualTo("jackzhang");
     assertThat(user.getExternalAttrs()).isNotEmpty();
 
     final WxCpUser.ExternalAttribute externalAttr1 = user.getExternalAttrs().get(0);
@@ -95,11 +103,13 @@ public class WxCpUserGsonAdapterTest {
     assertThat(externalAttr3.getAppid()).isEqualTo("wx8bd80126147df384");
     assertThat(externalAttr3.getPagePath()).isEqualTo("/index");
     assertThat(externalAttr3.getTitle()).isEqualTo("my miniprogram");
+
   }
 
   @Test
   public void testSerialize() {
     WxCpUser user = new WxCpUser();
+    user.setOrders(new Integer[]{1, 2});
     user.addExternalAttr(WxCpUser.ExternalAttribute.builder()
       .type(0)
       .name("文本名称")
@@ -119,6 +129,10 @@ public class WxCpUserGsonAdapterTest {
       .title("my miniprogram")
       .build());
 
-    assertThat(user.toJson()).isEqualTo("{\"external_profile\":{\"external_attr\":[{\"type\":0,\"name\":\"文本名称\",\"text\":{\"value\":\"文本\"}},{\"type\":1,\"name\":\"网页名称\",\"web\":{\"url\":\"http://www.test.com\",\"title\":\"标题\"}},{\"type\":2,\"name\":\"测试app\",\"miniprogram\":{\"appid\":\"wx8bd80126147df384\",\"pagepath\":\"/index\",\"title\":\"my miniprogram\"}}]}}");
+    assertThat(user.toJson()).isEqualTo("{\"order\":[1,2],\"external_profile\":{\"external_attr\":" +
+      "[{\"type\":0,\"name\":\"文本名称\",\"text\":{\"value\":\"文本\"}}," +
+      "{\"type\":1,\"name\":\"网页名称\",\"web\":{\"url\":\"http://www.test.com\",\"title\":\"标题\"}}," +
+      "{\"type\":2,\"name\":\"测试app\"," +
+      "\"miniprogram\":{\"appid\":\"wx8bd80126147df384\",\"pagepath\":\"/index\",\"title\":\"my miniprogram\"}}]}}");
   }
 }

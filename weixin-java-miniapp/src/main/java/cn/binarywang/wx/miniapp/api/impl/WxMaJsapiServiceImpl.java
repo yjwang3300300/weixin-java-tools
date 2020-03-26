@@ -5,6 +5,7 @@ import cn.binarywang.wx.miniapp.api.WxMaService;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.AllArgsConstructor;
 import me.chanjar.weixin.common.bean.WxJsapiSignature;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.common.util.RandomUtils;
@@ -19,13 +20,38 @@ import java.util.concurrent.locks.Lock;
  *
  * @author <a href="https://github.com/binarywang">Binary Wang</a>
  */
+@AllArgsConstructor
 public class WxMaJsapiServiceImpl implements WxMaJsapiService {
   private static final JsonParser JSON_PARSER = new JsonParser();
 
   private WxMaService wxMaService;
 
-  public WxMaJsapiServiceImpl(WxMaService wxMaService) {
-    this.wxMaService = wxMaService;
+  @Override
+  public String getCardApiTicket() throws WxErrorException {
+    return getCardApiTicket(false);
+  }
+
+  @Override
+  public String getCardApiTicket(boolean forceRefresh) throws WxErrorException {
+    Lock lock = this.wxMaService.getWxMaConfig().getCardApiTicketLock();
+    try {
+      lock.lock();
+      if (forceRefresh) {
+        this.wxMaService.getWxMaConfig().expireCardApiTicket();
+      }
+
+      if (this.wxMaService.getWxMaConfig().isCardApiTicketExpired()) {
+        String responseContent = this.wxMaService.get(GET_JSAPI_TICKET_URL + "?type=wx_card", null);
+        JsonElement tmpJsonElement = JSON_PARSER.parse(responseContent);
+        JsonObject tmpJsonObject = tmpJsonElement.getAsJsonObject();
+        String jsapiTicket = tmpJsonObject.get("ticket").getAsString();
+        int expiresInSeconds = tmpJsonObject.get("expires_in").getAsInt();
+        this.wxMaService.getWxMaConfig().updateCardApiTicket(jsapiTicket, expiresInSeconds);
+      }
+    } finally {
+      lock.unlock();
+    }
+    return this.wxMaService.getWxMaConfig().getCardApiTicket();
   }
 
   @Override
@@ -43,7 +69,7 @@ public class WxMaJsapiServiceImpl implements WxMaJsapiService {
       }
 
       if (this.wxMaService.getWxMaConfig().isJsapiTicketExpired()) {
-        String responseContent = this.wxMaService.get(GET_JSAPI_TICKET_URL, null);
+        String responseContent = this.wxMaService.get(GET_JSAPI_TICKET_URL + "?type=jsapi", null);
         JsonElement tmpJsonElement = JSON_PARSER.parse(responseContent);
         JsonObject tmpJsonObject = tmpJsonElement.getAsJsonObject();
         String jsapiTicket = tmpJsonObject.get("ticket").getAsString();
