@@ -6,13 +6,15 @@ import cn.binarywang.wx.miniapp.bean.WxMaGetLiveInfo;
 import cn.binarywang.wx.miniapp.util.json.WxMaGsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import lombok.AllArgsConstructor;
 import me.chanjar.weixin.common.WxType;
 import me.chanjar.weixin.common.error.WxError;
 import me.chanjar.weixin.common.error.WxErrorException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <pre>
@@ -32,26 +34,23 @@ public class WxMaLiveServiceImpl implements WxMaLiveService {
     return WxMaGetLiveInfo.fromJson(jsonObject.toString());
   }
 
-  /**
-   * 获取所有直播房间列表
-   * @return
-   */
+  @Override
   public List<WxMaGetLiveInfo.RoomInfo> getLiveinfos() throws WxErrorException {
     List<WxMaGetLiveInfo.RoomInfo> results = new ArrayList<>();
     Integer start = 0;
     Integer limit = 80;
     Integer tatal = 0;
-    WxMaGetLiveInfo user = null;
+    WxMaGetLiveInfo liveInfo = null;
     do {
       if (tatal != 0 && tatal <= start) {
         break;
       }
-      user = getLiveInfo(start, limit);
-      if (user == null) {
+      liveInfo = getLiveInfo(start, limit);
+      if (liveInfo == null) {
         return null;
       }
-      results.addAll(user.getRoomInfos());
-      tatal = user.getTotal();
+      results.addAll(liveInfo.getRoomInfos());
+      tatal = liveInfo.getTotal();
       start = results.size();
       try {
         Thread.sleep(100);
@@ -78,6 +77,7 @@ public class WxMaLiveServiceImpl implements WxMaLiveService {
 
   /**
    * 包装一下
+   *
    * @param start
    * @param limit
    * @param map
