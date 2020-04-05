@@ -1,5 +1,6 @@
 package cn.binarywang.wx.miniapp.bean;
 
+import cn.binarywang.wx.miniapp.util.json.WxMaGsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
@@ -28,6 +29,10 @@ public class WxMaGetLiveInfo implements Serializable {
    */
   @SerializedName("live_replay")
   private List<LiveReplay> liveReplay;
+
+  public static WxMaGetLiveInfo fromJson(String json) {
+    return WxMaGsonBuilder.create().fromJson(json, WxMaGetLiveInfo.class);
+  }
 
   /**
    * 直播列表

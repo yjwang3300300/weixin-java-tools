@@ -33,15 +33,22 @@ public class WxMaLiveServiceImplTest {
 
   @Test
   public void getLiveInfo() throws Exception {
-    List<WxMaGetLiveInfo.RoomInfo> list = this.wxService.getLiveService().getLiveInfo(0,10);
+    WxMaGetLiveInfo list = this.wxService.getLiveService().getLiveInfo(0,10);
     assertNotNull(list);
-    System.out.println(list.stream().map(e -> e.getRoomid()).collect(Collectors.toList()).toString());
+    System.out.println(list.toString());
   }
 
   @Test
   public void getLiveReplay() throws Exception {
     // [12, 11, 10, 9, 8, 7, 6, 5, 3, 2]
-    List<WxMaGetLiveInfo.LiveReplay> list = this.wxService.getLiveService().getLiveReplay(11,0,10);
+    WxMaGetLiveInfo list = this.wxService.getLiveService().getLiveReplay(11,0,10);
+    assertNotNull(list);
+    System.out.println(list.toString());
+  }
+
+  @Test
+  public void getLiveinfos() throws Exception {
+    List<WxMaGetLiveInfo.RoomInfo> list = this.wxService.getLiveService().getLiveinfos();
     assertNotNull(list);
     System.out.println(list.toString());
   }

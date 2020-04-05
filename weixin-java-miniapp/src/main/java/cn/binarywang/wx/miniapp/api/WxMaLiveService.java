@@ -17,14 +17,21 @@ public interface WxMaLiveService {
   String GET_LIVE_INFO = "http://api.weixin.qq.com/wxa/business/getliveinfo";
 
   /**
-   * 获取直播房间列表.
+   * 获取直播房间列表.（分页）
    *
    * @param start 起始拉取房间，start = 0 表示从第 1 个房间开始拉取
    * @param limit 每次拉取的个数上限，不要设置过大，建议 100 以内
    * @return .
    * @throws WxErrorException .
    */
-  List<WxMaGetLiveInfo.RoomInfo> getLiveInfo(Integer start, Integer limit) throws WxErrorException;
+  WxMaGetLiveInfo getLiveInfo(Integer start, Integer limit) throws WxErrorException;
+
+  /**
+   * 获取所有直播间信息（没有分页直接获取全部）
+   * @return
+   * @throws WxErrorException
+   */
+  List<WxMaGetLiveInfo.RoomInfo> getLiveinfos() throws WxErrorException;
 
   /**
    *
@@ -37,7 +44,7 @@ public interface WxMaLiveService {
    * @return
    * @throws WxErrorException
    */
-  List<WxMaGetLiveInfo.LiveReplay> getLiveReplay(String action, Integer room_id, Integer start, Integer limit) throws WxErrorException;
+  WxMaGetLiveInfo getLiveReplay(String action, Integer room_id, Integer start, Integer limit) throws WxErrorException;
 
   /**
    *
@@ -50,6 +57,6 @@ public interface WxMaLiveService {
    * @return
    * @throws WxErrorException
    */
-  List<WxMaGetLiveInfo.LiveReplay> getLiveReplay(Integer room_id, Integer start, Integer limit) throws WxErrorException;
+  WxMaGetLiveInfo getLiveReplay(Integer room_id, Integer start, Integer limit) throws WxErrorException;
 
 }

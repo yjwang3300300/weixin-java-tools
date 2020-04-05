@@ -12,9 +12,7 @@ import me.chanjar.weixin.common.WxType;
 import me.chanjar.weixin.common.error.WxError;
 import me.chanjar.weixin.common.error.WxErrorException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <pre>
@@ -29,24 +27,52 @@ public class WxMaLiveServiceImpl implements WxMaLiveService {
   private WxMaService service;
 
   @Override
-  public List<WxMaGetLiveInfo.RoomInfo> getLiveInfo(Integer start, Integer limit) throws WxErrorException {
+  public WxMaGetLiveInfo getLiveInfo(Integer start, Integer limit) throws WxErrorException {
     JsonObject jsonObject = getJsonObject(start, limit, null);
-    return WxMaGsonBuilder.create().fromJson(jsonObject.get("room_info").toString(), new TypeToken<List<WxMaGetLiveInfo.RoomInfo>>() {
-    }.getType());
+    return WxMaGetLiveInfo.fromJson(jsonObject.toString());
+  }
+
+  /**
+   * 获取所有直播房间列表
+   * @return
+   */
+  public List<WxMaGetLiveInfo.RoomInfo> getLiveinfos() throws WxErrorException {
+    List<WxMaGetLiveInfo.RoomInfo> results = new ArrayList<>();
+    Integer start = 0;
+    Integer limit = 80;
+    Integer tatal = 0;
+    WxMaGetLiveInfo user = null;
+    do {
+      if (tatal != 0 && tatal <= start) {
+        break;
+      }
+      user = getLiveInfo(start, limit);
+      if (user == null) {
+        return null;
+      }
+      results.addAll(user.getRoomInfos());
+      tatal = user.getTotal();
+      start = results.size();
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    } while (results.size() <= tatal);
+    return results;
   }
 
   @Override
-  public List<WxMaGetLiveInfo.LiveReplay> getLiveReplay(String action, Integer room_id, Integer start, Integer limit) throws WxErrorException {
+  public WxMaGetLiveInfo getLiveReplay(String action, Integer room_id, Integer start, Integer limit) throws WxErrorException {
     Map<String, Object> map = new HashMap(4);
     map.put("action", action);
     map.put("room_id", room_id);
     JsonObject jsonObject = getJsonObject(start, limit, map);
-    return WxMaGsonBuilder.create().fromJson(jsonObject.get("live_replay").toString(), new TypeToken<List<WxMaGetLiveInfo.LiveReplay>>() {
-    }.getType());
+    return WxMaGetLiveInfo.fromJson(jsonObject.toString());
   }
 
   @Override
-  public List<WxMaGetLiveInfo.LiveReplay> getLiveReplay(Integer room_id, Integer start, Integer limit) throws WxErrorException {
+  public WxMaGetLiveInfo getLiveReplay(Integer room_id, Integer start, Integer limit) throws WxErrorException {
     return getLiveReplay("get_replay", room_id, start, limit);
   }
 
