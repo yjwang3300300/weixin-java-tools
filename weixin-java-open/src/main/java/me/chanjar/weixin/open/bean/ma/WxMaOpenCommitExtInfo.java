@@ -2,6 +2,7 @@ package me.chanjar.weixin.open.bean.ma;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import me.chanjar.weixin.open.util.json.WxOpenGsonBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
@@ -14,6 +15,8 @@ import java.util.Map;
  * 微信小程序三方平台代上传代码提交额外信息对象
  * <p>
  * 如果代码中已经有配置，则配置的合并规则为：除了pages和tabBar.list直接覆盖原配置，其他都为插入或同级覆盖。
+ * extjson 详细说明
+ * https://developers.weixin.qq.com/miniprogram/dev/devtools/ext.html#%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%A8%A1%E6%9D%BF%E5%BC%80%E5%8F%91
  * </p>
  *
  * @author yqx
@@ -31,6 +34,16 @@ public class WxMaOpenCommitExtInfo implements Serializable {
    */
   private String extAppid;
 
+  /**
+   * 配置 ext.json 是否生效
+   */
+  private Boolean extEnable = Boolean.TRUE;
+
+  /**
+   * 是否直接提交到待审核列表
+   */
+  private Boolean directCommit = Boolean.FALSE;
+
   @SerializedName("ext")
   private Map<String, Object> extMap;
 
@@ -42,6 +55,12 @@ public class WxMaOpenCommitExtInfo implements Serializable {
    */
   @SerializedName("pages")
   private List<String> pageList;
+
+  /**
+   * 分包结构配置
+   */
+  @SerializedName("subpackages")
+  private List<WxMaOpenSubpackage> subpackageList;
 
   @SerializedName("window")
   private WxMaOpenWindow window;
@@ -92,5 +111,9 @@ public class WxMaOpenCommitExtInfo implements Serializable {
 
   public static WxMaOpenCommitExtInfo INSTANCE() {
     return new WxMaOpenCommitExtInfo();
+  }
+
+  public String toJson() {
+    return WxOpenGsonBuilder.create().toJson(this);
   }
 }

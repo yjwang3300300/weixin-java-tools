@@ -5,6 +5,8 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import lombok.*;
 import me.chanjar.weixin.common.annotation.Required;
 
+import java.util.Map;
+
 /**
  * <pre>
  *  拉取订单评价数据接口的请求参数封装类.
@@ -85,7 +87,13 @@ public class WxPayQueryCommentRequest extends BaseWxPayRequest {
   }
 
   @Override
-  protected String[] getIgnoredParamsForSign() {
-    return new String[]{"limit","sign_type"};
+  protected void storeMap(Map<String, String> map) {
+    map.put("begin_time", beginTime);
+    map.put("end_time", endTime);
+    map.put("offset", offset.toString());
+    if (limit != null) {
+      map.put("limit", limit.toString());
+    }
   }
+
 }

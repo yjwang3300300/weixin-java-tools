@@ -1,8 +1,5 @@
 package com.github.binarywang.wxpay.bean.entpay;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
 import com.github.binarywang.wxpay.bean.request.BaseWxPayRequest;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import lombok.AllArgsConstructor;
@@ -11,6 +8,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import me.chanjar.weixin.common.annotation.Required;
+import me.chanjar.weixin.common.util.json.WxGsonBuilder;
+
+import java.util.Map;
 
 /**
  * <pre>
@@ -27,6 +27,8 @@ import me.chanjar.weixin.common.annotation.Required;
 @AllArgsConstructor
 @XStreamAlias("xml")
 public class EntPayRequest extends BaseWxPayRequest {
+  private static final long serialVersionUID = 8647710192770447579L;
+
   /**
    * <pre>
    * 字段名：公众账号appid.
@@ -192,12 +194,21 @@ public class EntPayRequest extends BaseWxPayRequest {
   }
 
   @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
+  protected String[] getIgnoredParamsForSign() {
+    return new String[]{"sign_type"};
   }
 
   @Override
-  protected String[] getIgnoredParamsForSign() {
-    return new String[]{"sign_type"};
+  protected void storeMap(Map<String, String> map) {
+    map.put("mch_appid", mchAppid);
+    map.put("mchid", mchId);
+    map.put("device_info", deviceInfo);
+    map.put("partner_trade_no", partnerTradeNo);
+    map.put("openid", openid);
+    map.put("check_name", checkName);
+    map.put("re_user_name", reUserName);
+    map.put("amount", amount.toString());
+    map.put("desc", description);
+    map.put("spbill_create_ip", spbillCreateIp);
   }
 }

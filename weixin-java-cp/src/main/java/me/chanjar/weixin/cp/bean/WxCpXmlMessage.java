@@ -1,24 +1,28 @@
 package me.chanjar.weixin.cp.bean;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamConverter;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.api.WxConsts;
+import me.chanjar.weixin.common.util.XmlUtils;
+import me.chanjar.weixin.common.util.xml.IntegerArrayConverter;
+import me.chanjar.weixin.common.util.xml.LongArrayConverter;
 import me.chanjar.weixin.common.util.xml.XStreamCDataConverter;
 import me.chanjar.weixin.cp.config.WxCpConfigStorage;
 import me.chanjar.weixin.cp.util.crypto.WxCpCryptUtil;
+import me.chanjar.weixin.cp.util.json.WxCpGsonBuilder;
 import me.chanjar.weixin.cp.util.xml.XStreamTransformer;
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <pre>
@@ -35,6 +39,11 @@ import me.chanjar.weixin.cp.util.xml.XStreamTransformer;
 @XStreamAlias("xml")
 public class WxCpXmlMessage implements Serializable {
   private static final long serialVersionUID = -1042994982179476410L;
+
+  /**
+   * 使用dom4j解析的存放所有xml属性和值的map.
+   */
+  private Map<String, Object> allFieldsMap;
 
   ///////////////////////
   // 以下都是微信推送过来的消息的xml的element所对应的属性
@@ -149,9 +158,13 @@ public class WxCpXmlMessage implements Serializable {
   @XStreamConverter(value = XStreamCDataConverter.class)
   private String recognition;
 
+  @XStreamAlias("TaskId")
+  @XStreamConverter(value = XStreamCDataConverter.class)
+  private String taskId;
+
   /**
    * 通讯录变更事件.
-   * 请参考常量 me.chanjar.weixin.cp.WxCpConsts.ContactChangeType
+   * 请参考常量 me.chanjar.weixin.cp.constant.WxCpConsts.ContactChangeType
    */
   @XStreamAlias("ChangeType")
   @XStreamConverter(value = XStreamCDataConverter.class)
@@ -164,6 +177,26 @@ public class WxCpXmlMessage implements Serializable {
   @XStreamConverter(value = XStreamCDataConverter.class)
   private String userId;
 
+  /**
+   * 变更信息的外部联系人的userid，注意不是企业成员的帐号.
+   */
+  @XStreamAlias("ExternalUserID")
+  @XStreamConverter(value = XStreamCDataConverter.class)
+  private String externalUserId;
+
+  /**
+   * 添加此用户的「联系我」方式配置的state参数，可用于识别添加此用户的渠道.
+   */
+  @XStreamAlias("State")
+  @XStreamConverter(value = XStreamCDataConverter.class)
+  private String state;
+
+  /**
+   * 欢迎语code，可用于发送欢迎语.
+   */
+  @XStreamAlias("WelcomeCode")
+  @XStreamConverter(value = XStreamCDataConverter.class)
+  private String welcomeCode;
   /**
    * 新的UserID，变更时推送（userid由系统生成时可更改一次）.
    */
@@ -180,11 +213,11 @@ public class WxCpXmlMessage implements Serializable {
   private String name;
 
   /**
-   * 成员部门列表.
+   * 成员部门列表，变更时推送，仅返回该应用有查看权限的部门id.
    */
   @XStreamAlias("Department")
-  @XStreamConverter(value = XStreamCDataConverter.class)
-  private String department;
+  @XStreamConverter(value = LongArrayConverter.class)
+  private Long[] departments;
 
   /**
    * 手机号码.
@@ -234,11 +267,25 @@ public class WxCpXmlMessage implements Serializable {
   private Integer isLeader;
 
   /**
+   * 表示所在部门是否为上级，0-否，1-是，顺序与Department字段的部门逐一对应.
+   */
+  @XStreamAlias("IsLeaderInDept")
+  @XStreamConverter(value = IntegerArrayConverter.class)
+  private Integer[] isLeaderInDept;
+
+  /**
    * 座机.
    */
   @XStreamAlias("Telephone")
   @XStreamConverter(value = XStreamCDataConverter.class)
   private String telephone;
+
+  /**
+   * 地址.
+   */
+  @XStreamAlias("Address")
+  @XStreamConverter(value = XStreamCDataConverter.class)
+  private String address;
 
   /**
    * 扩展属性.
@@ -250,7 +297,7 @@ public class WxCpXmlMessage implements Serializable {
    * 部门Id.
    */
   @XStreamAlias("Id")
-  private Integer id;
+  private Long id;
 
   /**
    * 父部门id.
@@ -320,17 +367,20 @@ public class WxCpXmlMessage implements Serializable {
    */
   @XStreamAlias("TotalCount")
   private Integer totalCount;
+
   /**
    * 过滤.
    * （过滤是指特定地区、性别的过滤、用户设置拒收的过滤，用户接收已超4条的过滤）后，准备发送的粉丝数，原则上，filterCount = sentCount + errorCount
    */
   @XStreamAlias("FilterCount")
   private Integer filterCount;
+
   /**
    * 发送成功的粉丝数.
    */
   @XStreamAlias("SentCount")
   private Integer sentCount;
+
   /**
    * 发送失败的粉丝数.
    */
@@ -349,7 +399,9 @@ public class WxCpXmlMessage implements Serializable {
   protected static WxCpXmlMessage fromXml(String xml) {
     //修改微信变态的消息内容格式，方便解析
     xml = xml.replace("</PicList><PicList>", "");
-    return XStreamTransformer.fromXml(WxCpXmlMessage.class, xml);
+    final WxCpXmlMessage xmlMessage = XStreamTransformer.fromXml(WxCpXmlMessage.class, xml);
+    xmlMessage.setAllFieldsMap(XmlUtils.xml2Map(xml));
+    return xmlMessage;
   }
 
   protected static WxCpXmlMessage fromXml(InputStream is) {
@@ -370,7 +422,7 @@ public class WxCpXmlMessage implements Serializable {
   public static WxCpXmlMessage fromEncryptedXml(InputStream is, WxCpConfigStorage wxCpConfigStorage,
                                                 String timestamp, String nonce, String msgSignature) {
     try {
-      return fromEncryptedXml(IOUtils.toString(is, "UTF-8"), wxCpConfigStorage, timestamp, nonce, msgSignature);
+      return fromEncryptedXml(IOUtils.toString(is, StandardCharsets.UTF_8), wxCpConfigStorage, timestamp, nonce, msgSignature);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -378,7 +430,7 @@ public class WxCpXmlMessage implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
+    return WxCpGsonBuilder.create().toJson(this);
   }
 
   @Data
@@ -402,9 +454,11 @@ public class WxCpXmlMessage implements Serializable {
 
   @Data
   public static class ExtAttr {
-    @XStreamAlias("Item")
+
+    @XStreamImplicit(itemFieldName = "Item")
     protected final List<Item> items = new ArrayList<>();
 
+    @XStreamAlias("Item")
     @Data
     public static class Item {
       @XStreamAlias("Name")

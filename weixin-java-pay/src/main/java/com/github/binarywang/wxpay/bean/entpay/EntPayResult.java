@@ -5,6 +5,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.w3c.dom.Document;
 
 /**
  * <pre>
@@ -19,6 +20,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @XStreamAlias("xml")
 public class EntPayResult extends BaseWxPayResult {
+  private static final long serialVersionUID = 8523569987269603097L;
+
   /**
    * 商户号.
    */
@@ -56,4 +59,13 @@ public class EntPayResult extends BaseWxPayResult {
   @XStreamAlias("payment_time")
   private String paymentTime;
 
+  @Override
+  protected void loadXML(Document d) {
+    mchId = readXMLString(d, "mchid");
+    mchAppid = readXMLString(d, "mch_appid");
+    deviceInfo = readXMLString(d, "device_info");
+    partnerTradeNo = readXMLString(d, "partner_trade_no");
+    paymentNo = readXMLString(d, "payment_no");
+    paymentTime = readXMLString(d, "payment_time");
+  }
 }

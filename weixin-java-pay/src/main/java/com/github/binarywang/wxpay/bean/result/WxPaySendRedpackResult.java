@@ -4,12 +4,13 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.w3c.dom.Document;
 
 import java.io.Serializable;
 
 /**
  * 向微信用户个人发现金红包返回结果
- * https://pay.weixin.qq.com/wiki/doc/api/cash_coupon.php?chapter=13_5
+ * https://pay.weixin.qq.com/wiki/doc/api/tools/cash_coupon.php?chapter=13_4&index=3
  *
  * @author kane
  */
@@ -37,5 +38,20 @@ public class WxPaySendRedpackResult extends BaseWxPayResult implements Serializa
 
   @XStreamAlias("send_listid")
   private String sendListid;
+
+  /**
+   * 从XML结构中加载额外的熟悉
+   *
+   * @param d Document
+   */
+  @Override
+  protected void loadXML(Document d) {
+    mchBillno = readXMLString(d, "mch_billno");
+    wxappid = readXMLString(d, "wxappid");
+    reOpenid = readXMLString(d, "re_openid");
+    totalAmount = readXMLInteger(d, "total_amount");
+    sendTime = readXMLString(d, "send_time");
+    sendListid = readXMLString(d, "send_listid");
+  }
 
 }

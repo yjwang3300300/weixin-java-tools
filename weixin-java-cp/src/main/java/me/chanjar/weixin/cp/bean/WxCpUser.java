@@ -1,14 +1,15 @@
 package me.chanjar.weixin.cp.bean;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import me.chanjar.weixin.cp.util.json.WxCpGsonBuilder;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 微信用户信息.
@@ -16,20 +17,38 @@ import me.chanjar.weixin.cp.util.json.WxCpGsonBuilder;
  * @author Daniel Qian
  */
 @Data
+@Accessors(chain = true)
 public class WxCpUser implements Serializable {
   private static final long serialVersionUID = -5696099236344075582L;
+
   private String userId;
   private String name;
-  private Integer[] departIds;
+  private Long[] departIds;
+  private Integer[] orders;
   private String position;
   private String mobile;
   private Gender gender;
   private String email;
   private String avatar;
+  private String thumbAvatar;
+
+  /**
+   * 地址。长度最大128个字符
+   */
+  private String address;
   private String avatarMediaId;
   private Integer status;
   private Integer enable;
+  /**
+   * 别名；第三方仅通讯录应用可获取
+   */
+  private String alias;
   private Integer isLeader;
+  /**
+   * is_leader_in_dept.
+   * 个数必须和department一致，表示在所在的部门内是否为上级。1表示为上级，0表示非上级。在审批等应用里可以用来标识上级审批人
+   */
+  private Integer[] isLeaderInDept;
   private final List<Attr> extAttrs = new ArrayList<>();
   private Integer hideMobile;
   private String englishName;
@@ -40,28 +59,40 @@ public class WxCpUser implements Serializable {
    * 成员对外信息.
    */
   private List<ExternalAttribute> externalAttrs = new ArrayList<>();
+  private String externalPosition;
+  private String externalCorpName;
 
   public void addExternalAttr(ExternalAttribute externalAttr) {
     this.externalAttrs.add(externalAttr);
   }
 
   public void addExtAttr(String name, String value) {
-    this.extAttrs.add(new Attr(name, value));
+    this.extAttrs.add(new Attr().setType(0).setName(name).setTextValue(value));
+  }
+
+  public void addExtAttr(Attr attr) {
+    this.extAttrs.add(attr);
   }
 
   public static WxCpUser fromJson(String json) {
-    return WxCpGsonBuilder.INSTANCE.create().fromJson(json, WxCpUser.class);
+    return WxCpGsonBuilder.create().fromJson(json, WxCpUser.class);
   }
 
   public String toJson() {
-    return WxCpGsonBuilder.INSTANCE.create().toJson(this);
+    return WxCpGsonBuilder.create().toJson(this);
   }
 
   @Data
-  @AllArgsConstructor
+  @Accessors(chain = true)
   public static class Attr {
+    /**
+     * 属性类型: 0-文本 1-网页
+     */
+    private int type;
     private String name;
-    private String value;
+    private String textValue;
+    private String webUrl;
+    private String webTitle;
   }
 
   @Data
