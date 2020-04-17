@@ -45,7 +45,7 @@ public class WxMaGetLiveInfo implements Serializable {
     @SerializedName("cover_img")
     private String coverImg;
     @SerializedName("live_satus")
-    private Integer liveSatus;
+    private Integer liveStatus;
     @SerializedName("start_time")
     private Long startTime;
     @SerializedName("end_time")
