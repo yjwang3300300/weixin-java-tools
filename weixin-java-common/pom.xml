@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.github.binarywang</groupId>
     <artifactId>wx-java</artifactId>
-    <version>3.7.5.B</version>
+    <version>3.7.7.B</version>
   </parent>
 
   <artifactId>weixin-java-common</artifactId>
@@ -122,10 +122,17 @@
       <groupId>redis.clients</groupId>
       <artifactId>jedis</artifactId>
     </dependency>
-
     <dependency>
       <groupId>com.github.jedis-lock</groupId>
       <artifactId>jedis-lock</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.redisson</groupId>
+      <artifactId>redisson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.data</groupId>
+      <artifactId>spring-data-redis</artifactId>
     </dependency>
   </dependencies>
 

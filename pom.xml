@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.binarywang</groupId>
   <artifactId>wx-java</artifactId>
-  <version>3.7.5.B</version>
+  <version>3.7.7.B</version>
   <packaging>pom</packaging>
   <name>WxJava - Weixin/Wechat Java SDK</name>
   <description>微信开发Java SDK</description>
@@ -253,6 +253,14 @@
         <groupId>org.redisson</groupId>
         <artifactId>redisson</artifactId>
         <version>3.12.0</version>
+        <optional>true</optional>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-redis</artifactId>
+        <version>1.8.23.RELEASE</version>
+        <optional>true</optional>
         <scope>provided</scope>
       </dependency>
       <dependency>
