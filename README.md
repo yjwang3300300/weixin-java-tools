@@ -43,7 +43,7 @@
 </table>
 
 ### 重要信息
-1. **2020-02-29 发布 [【3.7.0正式版】](https://github.com/Wechat-Group/WxJava/releases)**！
+1. **2020-05-24 发布 [【3.8.0正式版】](https://mp.weixin.qq.com/s/1YvMLcSOzhDHhIeX1bLRuQ)**！
 1. 新手重要提示：本项目仅是一个SDK开发工具包，未提供Web实现，建议使用 `maven` 或 `gradle` 引用本项目即可使用本SDK提供的各种功能，详情可参考 **[【Demo项目】](demo.md)** 或本项目中的部分单元测试代码；另外微信开发新手请务必阅读[【开发文档 Wiki 首页】](https://github.com/Wechat-Group/WxJava/wiki)的常见问题部分，可以少走很多弯路，节省不少时间。
 1. 技术交流群：想获得QQ群/微信群/钉钉企业群等信息的同学，请使用微信扫描上面的微信公众号二维码关注 `WxJava` 后点击相关菜单即可获取加入方式，同时也可以在微信中搜索 `weixin-java-tools` 或 `WxJava` 后选择正确的公众号进行关注，该公众号会及时通知SDK相关更新信息，并不定期分享微信Java开发相关技术知识；
 1. 付费QQ群：（**注意：刚入群会有5分钟禁言，稍等片刻即可正常发言**） [![加入QQ群](https://img.shields.io/badge/QQ群-343954419-blue.svg)](http://shang.qq.com/wpa/qunwpa?idkey=731dc3e7ea31ebe25376cc1a791445468612c63fd0e9e05399b088ec81fd9e15) 或 [![加入QQ群](https://img.shields.io/badge/QQ群-343954419-blue.svg)](http://jq.qq.com/?_wv=1027&k=40lRskK)，或者请自行搜索群号`343954419`进行添加；当然由于某种原因无法入群的，可关注公众号后获取其他群的加入方式；
@@ -73,7 +73,7 @@
 <dependency>
   <groupId>com.github.binarywang</groupId>
   <artifactId>（不同模块参考下文）</artifactId>
-  <version>3.7.0</version>
+  <version>3.8.0</version>
 </dependency>
 ```
 
@@ -138,6 +138,7 @@
 - 民医台
 - YshopMall
 - 好行景区直通车以及全国40多个公众号
+- 我奥篮球公众号
 
 #### 企业号/企业微信：
 - 洽洽企业号
@@ -157,16 +158,16 @@
 <details>
 <summary>点击此处展开查看贡献次数最多的几位同学</summary>
 
-1. [chanjarster (Daniel Qian)](http://github.com/chanjarster)
-1. [binarywang (Binary Wang)](http://github.com/binarywang)
-1. [mgcnrx11](http://github.com/mgcnrx11)
-1. [007gzs](http://github.com/007gzs)
-1. [aimilin6688 (Jonk)](http://github.com/aimilin6688)
-1. [kakotor](http://github.com/kakotor)
-1. [kareanyi (MillerLin)](http://github.com/kareanyi)
-1. [tianmu](http://github.com/tianmu)
-1. [rememberber (周波)](http://github.com/rememberber)
-1. [charmingoh (Charming)](http://github.com/charmingoh)
+1. [chanjarster (Daniel Qian)](https://github.com/chanjarster)
+1. [binarywang (Binary Wang)](https://github.com/binarywang)
+1. [007gzs](https://github.com/007gzs)
+1. [Silloy](https://github.com/silloy)
+1. [mgcnrx11](https://github.com/mgcnrx11)
+1. [yuanqixun](https://github.com/yuanqixun)
+1. [kakotor](https://github.com/kakotor)
+1. [aimilin6688 (Jonk)](https://github.com/aimilin6688)
+1. [lkqm (Mario Luo)](https://github.com/lkqm)
+1. [kareanyi (MillerLin)](https://github.com/kareanyi)
 
 </details>
 
