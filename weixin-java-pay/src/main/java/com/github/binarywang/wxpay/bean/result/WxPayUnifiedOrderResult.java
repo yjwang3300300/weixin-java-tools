@@ -50,11 +50,11 @@ public class WxPayUnifiedOrderResult extends BaseWxPayResult {
    * @param d Document
    */
   @Override
-  protected void loadXML(Document d) {
-    prepayId = readXMLString(d, "prepay_id");
-    tradeType = readXMLString(d, "trade_type");
-    mwebUrl = readXMLString(d, "mweb_url");
-    codeURL = readXMLString(d, "code_url");
+  protected void loadXml(Document d) {
+    prepayId = readXmlString(d, "prepay_id");
+    tradeType = readXmlString(d, "trade_type");
+    mwebUrl = readXmlString(d, "mweb_url");
+    codeURL = readXmlString(d, "code_url");
   }
 
 }

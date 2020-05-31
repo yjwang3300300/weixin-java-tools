@@ -21,7 +21,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @XStreamAlias("xml")
 public class WxPayFaceAuthInfoResult extends BaseWxPayResult implements Serializable {
-
   private static final long serialVersionUID = -65138145275211272L;
 
   /**
@@ -42,9 +41,9 @@ public class WxPayFaceAuthInfoResult extends BaseWxPayResult implements Serializ
    * @param d Document
    */
   @Override
-  protected void loadXML(Document d) {
-    authinfo = readXMLString(d, "authinfo");
-    expiresIn = readXMLString(d, "expires_in");
+  protected void loadXml(Document d) {
+    authinfo = readXmlString(d, "authinfo");
+    expiresIn = readXmlString(d, "expires_in");
   }
 
 }

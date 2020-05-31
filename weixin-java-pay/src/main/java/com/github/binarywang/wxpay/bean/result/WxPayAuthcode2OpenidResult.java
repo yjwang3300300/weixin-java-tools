@@ -37,8 +37,8 @@ public class WxPayAuthcode2OpenidResult extends BaseWxPayResult {
    * @param d Document
    */
   @Override
-  protected void loadXML(Document d) {
-    openid = readXMLString(d, "openid");
+  protected void loadXml(Document d) {
+    openid = readXmlString(d, "openid");
   }
 
 }

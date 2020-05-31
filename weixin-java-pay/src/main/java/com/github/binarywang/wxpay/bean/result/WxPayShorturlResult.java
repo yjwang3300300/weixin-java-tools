@@ -38,8 +38,8 @@ public class WxPayShorturlResult extends BaseWxPayResult {
    * @param d Document
    */
   @Override
-  protected void loadXML(Document d) {
-    shortUrl = readXMLString(d, "short_url");
+  protected void loadXml(Document d) {
+    shortUrl = readXmlString(d, "short_url");
   }
 
 }
