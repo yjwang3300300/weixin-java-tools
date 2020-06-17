@@ -1,15 +1,17 @@
 package com.github.binarywang.wxpay.bean.result;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import me.chanjar.weixin.common.util.json.WxGsonBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * <pre>
@@ -23,7 +25,8 @@ import org.w3c.dom.Document;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @XStreamAlias("xml")
-public class WxPayRefundQueryResult extends BaseWxPayResult {
+public class WxPayRefundQueryResult extends BaseWxPayResult implements Serializable {
+  private static final long serialVersionUID = 5392369423225328754L;
   /**
    * <pre>
    * 字段名：设备号.
@@ -129,6 +132,34 @@ public class WxPayRefundQueryResult extends BaseWxPayResult {
   private Integer refundCount;
 
   private List<RefundRecord> refundRecords;
+
+  /**
+   * 营销详情.
+   */
+  @XStreamAlias("promotion_detail")
+  private String promotionDetailString;
+
+  private List<WxPayRefundPromotionDetail> promotionDetails;
+
+  /**
+   * 组装生成营销详情信息.
+   */
+  public void composePromotionDetails() {
+    if (StringUtils.isEmpty(this.promotionDetailString)) {
+      return;
+    }
+
+    JsonElement tmpJsonElement = new JsonParser().parse(this.promotionDetailString);
+
+    final List<WxPayRefundPromotionDetail> promotionDetail = WxGsonBuilder.create()
+      .fromJson(tmpJsonElement.getAsJsonObject().get("promotion_detail"),
+        new TypeToken<List<WxPayRefundPromotionDetail>>() {
+        }.getType()
+      );
+
+    this.setPromotionDetails(promotionDetail);
+  }
+
 
   /**
    * 组装生成退款记录属性的内容.

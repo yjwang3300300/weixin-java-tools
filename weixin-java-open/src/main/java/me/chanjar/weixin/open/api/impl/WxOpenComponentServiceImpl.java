@@ -4,6 +4,8 @@ import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxError;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.common.util.crypto.SHA1;
@@ -18,29 +20,25 @@ import me.chanjar.weixin.open.bean.message.WxOpenXmlMessage;
 import me.chanjar.weixin.open.bean.result.*;
 import me.chanjar.weixin.open.util.json.WxOpenGsonBuilder;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 /**
  * @author <a href="https://github.com/007gzs">007</a>
  */
+@Slf4j
+@AllArgsConstructor
 public class WxOpenComponentServiceImpl implements WxOpenComponentService {
   private static final JsonParser JSON_PARSER = new JsonParser();
   private static final Map<String, WxOpenMaService> WX_OPEN_MA_SERVICE_MAP = new ConcurrentHashMap<>();
   private static final Map<String, WxMpService> WX_OPEN_MP_SERVICE_MAP = new ConcurrentHashMap<>();
   private static final Map<String, WxOpenFastMaService> WX_OPEN_FAST_MA_SERVICE_MAP = new ConcurrentHashMap<>();
 
-  protected final Logger log = LoggerFactory.getLogger(this.getClass());
-  private WxOpenService wxOpenService;
-
-  public WxOpenComponentServiceImpl(WxOpenService wxOpenService) {
-    this.wxOpenService = wxOpenService;
-  }
+  private final WxOpenService wxOpenService;
 
   @Override
   public WxMpService getWxMpServiceByAppid(String appId) {
@@ -227,41 +225,33 @@ public class WxOpenComponentServiceImpl implements WxOpenComponentService {
   }
 
   @Override
-  public String getPreAuthUrl(String redirectURI, String authType, String bizAppid) throws WxErrorException {
-    return createPreAuthUrl(redirectURI, authType, bizAppid, false);
+  public String getPreAuthUrl(String redirectUri, String authType, String bizAppid) throws WxErrorException {
+    return createPreAuthUrl(redirectUri, authType, bizAppid, false);
   }
 
   @Override
-  public String getMobilePreAuthUrl(String redirectURI) throws WxErrorException {
-    return getMobilePreAuthUrl(redirectURI, null, null);
+  public String getMobilePreAuthUrl(String redirectUri) throws WxErrorException {
+    return getMobilePreAuthUrl(redirectUri, null, null);
   }
 
   @Override
-  public String getMobilePreAuthUrl(String redirectURI, String authType, String bizAppid) throws WxErrorException {
-    return createPreAuthUrl(redirectURI, authType, bizAppid, true);
+  public String getMobilePreAuthUrl(String redirectUri, String authType, String bizAppid) throws WxErrorException {
+    return createPreAuthUrl(redirectUri, authType, bizAppid, true);
   }
 
   /**
    * 创建预授权链接
-   *
-   * @param redirectURI
-   * @param authType
-   * @param bizAppid
-   * @param isMobile    是否移动端预授权
-   * @return
-   * @throws WxErrorException
    */
-  private String createPreAuthUrl(String redirectURI, String authType, String bizAppid, boolean isMobile) throws WxErrorException {
+  private String createPreAuthUrl(String redirectUri, String authType, String bizAppid, boolean isMobile) throws WxErrorException {
     JsonObject jsonObject = new JsonObject();
     jsonObject.addProperty("component_appid", getWxOpenConfigStorage().getComponentAppId());
     String responseContent = post(API_CREATE_PREAUTHCODE_URL, jsonObject.toString());
     jsonObject = WxGsonBuilder.create().fromJson(responseContent, JsonObject.class);
 
-    StringBuilder preAuthUrl = new StringBuilder(String.format((isMobile ? COMPONENT_MOBILE_LOGIN_PAGE_URL : COMPONENT_LOGIN_PAGE_URL),
+    String preAuthUrlStr = String.format((isMobile ? COMPONENT_MOBILE_LOGIN_PAGE_URL : COMPONENT_LOGIN_PAGE_URL),
       getWxOpenConfigStorage().getComponentAppId(),
       jsonObject.get("pre_auth_code").getAsString(),
-      URIUtil.encodeURIComponent(redirectURI)));
-    String preAuthUrlStr = preAuthUrl.toString();
+      URIUtil.encodeURIComponent(redirectUri));
     if (StringUtils.isNotEmpty(authType)) {
       preAuthUrlStr = preAuthUrlStr.replace("&auth_type=xxx", "&auth_type=" + authType);
     } else {
@@ -336,7 +326,7 @@ public class WxOpenComponentServiceImpl implements WxOpenComponentService {
 
   @Override
   public WxOpenAuthorizerListResult getAuthorizerList(int begin, int len) throws WxErrorException {
-    begin = begin < 0 ? 0 : begin;
+    begin = Math.max(begin, 0);
     len = len == 0 ? 10 : len;
     JsonObject jsonObject = new JsonObject();
     jsonObject.addProperty("component_appid", getWxOpenConfigStorage().getComponentAppId());
@@ -383,11 +373,15 @@ public class WxOpenComponentServiceImpl implements WxOpenComponentService {
       return config.getAuthorizerAccessToken(appId);
     }
     Lock lock = config.getWxMpConfigStorage(appId).getAccessTokenLock();
-    lock.lock();
+    boolean locked = false;
     try {
-      if (!config.isAuthorizerAccessTokenExpired(appId) && !forceRefresh) {
-        return config.getAuthorizerAccessToken(appId);
-      }
+      do {
+        locked = lock.tryLock(100, TimeUnit.MILLISECONDS);
+        if (!forceRefresh && !config.isAuthorizerAccessTokenExpired(appId)) {
+          return config.getAuthorizerAccessToken(appId);
+        }
+      } while (!locked);
+
       JsonObject jsonObject = new JsonObject();
       jsonObject.addProperty("component_appid", getWxOpenConfigStorage().getComponentAppId());
       jsonObject.addProperty("authorizer_appid", appId);
@@ -397,8 +391,12 @@ public class WxOpenComponentServiceImpl implements WxOpenComponentService {
       WxOpenAuthorizerAccessToken wxOpenAuthorizerAccessToken = WxOpenAuthorizerAccessToken.fromJson(responseContent);
       config.updateAuthorizerAccessToken(appId, wxOpenAuthorizerAccessToken);
       return config.getAuthorizerAccessToken(appId);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
     } finally {
-      lock.unlock();
+      if (locked) {
+        lock.unlock();
+      }
     }
   }
 
