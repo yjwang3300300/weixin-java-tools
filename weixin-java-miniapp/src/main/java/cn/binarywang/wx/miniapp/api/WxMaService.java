@@ -280,4 +280,12 @@ public interface WxMaService extends WxService {
    * @return .
    */
   WxMaLiveService getLiveService();
+
+  /**
+   * 获取直播间商品服务对象
+   *
+   * @return .
+   */
+  WxMaLiveGoodsService getLiveGoodsService();
+
 }

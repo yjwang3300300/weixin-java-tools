@@ -56,6 +56,7 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
   private final WxMaSubscribeService subscribeService = new WxMaSubscribeServiceImpl(this);
   private final WxMaCloudService cloudService = new WxMaCloudServiceImpl(this);
   private final WxMaLiveService liveService = new WxMaLiveServiceImpl(this);
+  private final WxMaLiveGoodsService liveGoodsService = new WxMaLiveGoodsServiceImpl(this);
 
   private int retrySleepMillis = 1000;
   private int maxRetryTimes = 5;
@@ -394,4 +395,10 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
   public WxMaLiveService getLiveService() {
     return this.liveService;
   }
+
+  @Override
+  public WxMaLiveGoodsService getLiveGoodsService() {
+    return this.liveGoodsService;
+  }
+
 }
