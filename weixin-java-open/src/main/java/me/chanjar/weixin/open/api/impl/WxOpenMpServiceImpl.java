@@ -1,9 +1,8 @@
 package me.chanjar.weixin.open.api.impl;
 
 import me.chanjar.weixin.common.error.WxErrorException;
-import me.chanjar.weixin.mp.config.WxMpConfigStorage;
 import me.chanjar.weixin.mp.api.impl.WxMpServiceImpl;
-import me.chanjar.weixin.mp.bean.result.WxMpOAuth2AccessToken;
+import me.chanjar.weixin.mp.config.WxMpConfigStorage;
 import me.chanjar.weixin.open.api.WxOpenComponentService;
 
 /**
@@ -31,18 +30,4 @@ public class WxOpenMpServiceImpl extends WxMpServiceImpl {
     return wxOpenComponentService.getAuthorizerAccessToken(appId, forceRefresh);
   }
 
-  @Override
-  public WxMpOAuth2AccessToken oauth2getAccessToken(String code) throws WxErrorException {
-    return wxOpenComponentService.oauth2getAccessToken(appId, code);
-  }
-
-  @Override
-  public WxMpOAuth2AccessToken oauth2refreshAccessToken(String refreshToken) throws WxErrorException {
-    return wxOpenComponentService.oauth2refreshAccessToken(appId, refreshToken);
-  }
-
-  @Override
-  public String oauth2buildAuthorizationUrl(String redirectURI, String scope, String state) {
-    return wxOpenComponentService.oauth2buildAuthorizationUrl(appId, redirectURI, scope, state);
-  }
 }

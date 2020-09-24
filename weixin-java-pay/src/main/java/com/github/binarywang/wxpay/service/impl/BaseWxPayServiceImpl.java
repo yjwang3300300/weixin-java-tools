@@ -62,6 +62,7 @@ public abstract class BaseWxPayServiceImpl implements WxPayService {
   private ProfitSharingService profitSharingService = new ProfitSharingServiceImpl(this);
   private RedpackService redpackService = new RedpackServiceImpl(this);
   private PayScoreService payScoreService = new PayScoreServiceImpl(this);
+  private EcommerceService ecommerceService = new EcommerceServiceImpl(this);
 
   /**
    * The Config.
@@ -86,6 +87,11 @@ public abstract class BaseWxPayServiceImpl implements WxPayService {
   @Override
   public RedpackService getRedpackService() {
     return this.redpackService;
+  }
+
+  @Override
+  public EcommerceService getEcommerceService() {
+    return ecommerceService;
   }
 
   @Override
@@ -190,10 +196,16 @@ public abstract class BaseWxPayServiceImpl implements WxPayService {
     try {
       log.debug("微信支付异步通知请求参数：{}", xmlData);
       WxPayOrderNotifyResult result = WxPayOrderNotifyResult.fromXML(xmlData);
-      if (result.getSignType() != null) {
-        // 如果解析的通知对象中signType有值，则使用它进行验签
-        signType = result.getSignType();
+      if (signType == null) {
+        if (result.getSignType() != null) {
+          // 如果解析的通知对象中signType有值，则使用它进行验签
+          signType = result.getSignType();
+        } else if (this.getConfig().getSignType() != null) {
+          // 如果配置中signType有值，则使用它进行验签
+          signType = this.getConfig().getSignType();
+        }
       }
+
       log.debug("微信支付异步通知请求解析后的对象：{}", result);
       result.checkResult(this, signType, false);
       return result;
@@ -236,27 +248,6 @@ public abstract class BaseWxPayServiceImpl implements WxPayService {
       throw new WxPayException("发生异常，" + e.getMessage(), e);
     }
 
-  }
-
-  @Override
-  public WxPaySendMiniProgramRedpackResult sendMiniProgramRedpack(WxPaySendMiniProgramRedpackRequest request)
-    throws WxPayException {
-    return this.redpackService.sendMiniProgramRedpack(request);
-  }
-
-  @Override
-  public WxPaySendRedpackResult sendRedpack(WxPaySendRedpackRequest request) throws WxPayException {
-    return this.redpackService.sendRedpack(request);
-  }
-
-  @Override
-  public WxPayRedpackQueryResult queryRedpack(String mchBillNo) throws WxPayException {
-    return this.redpackService.queryRedpack(mchBillNo);
-  }
-
-  @Override
-  public WxPayRedpackQueryResult queryRedpack(WxPayRedpackQueryRequest request) throws WxPayException {
-    return this.redpackService.queryRedpack(request);
   }
 
   @Override

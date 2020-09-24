@@ -11,7 +11,7 @@ import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.cp.constant.WxCpConsts.AppChatMsgType;
 import me.chanjar.weixin.cp.api.ApiTestModule;
 import me.chanjar.weixin.cp.api.WxCpService;
-import me.chanjar.weixin.cp.bean.WxCpAppChatMessage;
+import me.chanjar.weixin.cp.bean.message.WxCpAppChatMessage;
 import me.chanjar.weixin.cp.bean.WxCpChat;
 import me.chanjar.weixin.cp.bean.article.MpnewsArticle;
 import me.chanjar.weixin.cp.bean.article.NewArticle;
@@ -38,24 +38,24 @@ public class WxCpChatServiceImplTest {
   }
 
   @Test
-  public void testChatCreate() throws Exception {
-    final String result = cpService.getChatService().chatCreate("测试群聊", userId,
+  public void testCreate() throws Exception {
+    final String result = cpService.getChatService().create("测试群聊", userId,
       Arrays.asList(userId, userId), chatId);
     assertThat(result).isNotEmpty();
     assertThat(result).isEqualTo(chatId);
   }
 
   @Test
-  public void testChatGet() throws Exception {
-    WxCpChat chat = this.cpService.getChatService().chatGet(chatId);
+  public void testGet() throws Exception {
+    WxCpChat chat = this.cpService.getChatService().get(chatId);
     System.out.println(chat);
     Assert.assertEquals(chat.getName(), "测试群聊");
   }
 
   @Test
-  public void testChatUpdate() throws Exception {
-    this.cpService.getChatService().chatUpdate(chatId, "", "", Arrays.asList("ZhengWuYao"), null);
-    WxCpChat chat = this.cpService.getChatService().chatGet(chatId);
+  public void testUpdate() throws Exception {
+    this.cpService.getChatService().update(chatId, "", "", Arrays.asList("ZhengWuYao"), null);
+    WxCpChat chat = this.cpService.getChatService().get(chatId);
     System.out.println(chat);
     Assert.assertEquals(chat.getUsers().size(), 3);
   }

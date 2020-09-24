@@ -10,6 +10,7 @@ import com.github.binarywang.wxpay.bean.result.*;
 import com.github.binarywang.wxpay.config.WxPayConfig;
 import com.github.binarywang.wxpay.constant.WxPayConstants;
 import com.github.binarywang.wxpay.exception.WxPayException;
+import org.apache.http.client.methods.HttpPost;
 
 import java.io.File;
 import java.net.URI;
@@ -66,6 +67,28 @@ public interface WxPayService {
   String postV3(String url, String requestStr) throws WxPayException;
 
   /**
+   * 发送post请求，得到响应字符串.
+   *
+   * 部分字段会包含敏感信息，所以在提交前需要在请求头中会包含"Wechatpay-Serial"信息
+   *
+   * @param url        请求地址
+   * @param requestStr 请求信息
+   * @return 返回请求结果字符串 string
+   * @throws WxPayException the wx pay exception
+   */
+  String postV3WithWechatpaySerial(String url, String requestStr) throws WxPayException;
+
+  /**
+   * 发送post请求，得到响应字符串.
+   *
+   * @param url        请求地址
+   * @param httpPost 请求信息
+   * @return 返回请求结果字符串 string
+   * @throws WxPayException the wx pay exception
+   */
+  String postV3(String url, HttpPost httpPost) throws WxPayException;
+
+  /**
    * 发送get V3请求，得到响应字符串.
    *
    * @param url 请求地址
@@ -102,6 +125,12 @@ public interface WxPayService {
    * @return the ent pay service
    */
   PayScoreService getPayScoreService();
+
+  /**
+   * 获取电商收付通服务类
+   * @return
+   */
+  EcommerceService getEcommerceService();
 
   /**
    * 设置企业付款服务类，允许开发者自定义实现类.
@@ -383,30 +412,6 @@ public interface WxPayService {
    * @throws WxPayException the wx pay exception
    */
   WxScanPayNotifyResult parseScanPayNotifyResult(String xmlData) throws WxPayException;
-
-  /**
-   * @deprecated 建议使用 {@link RedpackService#sendMiniProgramRedpack(WxPaySendMiniProgramRedpackRequest)}
-   */
-  @Deprecated
-  WxPaySendMiniProgramRedpackResult sendMiniProgramRedpack(WxPaySendMiniProgramRedpackRequest request) throws WxPayException;
-
-  /**
-   * @deprecated 建议使用 {@link RedpackService#sendRedpack(WxPaySendRedpackRequest)}
-   */
-  @Deprecated
-  WxPaySendRedpackResult sendRedpack(WxPaySendRedpackRequest request) throws WxPayException;
-
-  /**
-   * @deprecated 建议使用 {@link RedpackService#queryRedpack(String)}
-   */
-  @Deprecated
-  WxPayRedpackQueryResult queryRedpack(String mchBillNo) throws WxPayException;
-
-  /**
-   * @deprecated 建议使用 {@link RedpackService#queryRedpack(WxPayRedpackQueryRequest)}
-   */
-  @Deprecated
-  WxPayRedpackQueryResult queryRedpack(WxPayRedpackQueryRequest request) throws WxPayException;
 
   /**
    * <pre>

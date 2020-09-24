@@ -3,14 +3,18 @@ package cn.binarywang.wx.miniapp.api.impl;
 import cn.binarywang.wx.miniapp.api.*;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.config.WxMaConfig;
+import cn.binarywang.wx.miniapp.util.WxMaConfigHolder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.WxType;
+import me.chanjar.weixin.common.api.WxConsts;
+import me.chanjar.weixin.common.api.WxImgProcService;
+import me.chanjar.weixin.common.api.WxOcrService;
 import me.chanjar.weixin.common.bean.WxAccessToken;
+import me.chanjar.weixin.common.enums.WxType;
 import me.chanjar.weixin.common.error.WxError;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.common.util.DataUtils;
@@ -19,6 +23,7 @@ import me.chanjar.weixin.common.util.http.RequestExecutor;
 import me.chanjar.weixin.common.util.http.RequestHttp;
 import me.chanjar.weixin.common.util.http.SimpleGetRequestExecutor;
 import me.chanjar.weixin.common.util.http.SimplePostRequestExecutor;
+import me.chanjar.weixin.common.util.json.GsonParser;
 import me.chanjar.weixin.common.util.json.WxGsonBuilder;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,22 +33,18 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
-import static cn.binarywang.wx.miniapp.constant.WxMaConstants.ErrorCode.*;
-
 /**
  * @author <a href="https://github.com/binarywang">Binary Wang</a>
  * @see #doGetAccessTokenRequest
  */
 @Slf4j
 public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestHttp<H, P> {
-  private static final JsonParser JSON_PARSER = new JsonParser();
-  private WxMaConfig wxMaConfig;
+  private Map<String, WxMaConfig> configMap;
 
   private final WxMaMsgService kefuService = new WxMaMsgServiceImpl(this);
   private final WxMaMediaService materialService = new WxMaMediaServiceImpl(this);
   private final WxMaUserService userService = new WxMaUserServiceImpl(this);
   private final WxMaQrcodeService qrCodeService = new WxMaQrcodeServiceImpl(this);
-  private final WxMaTemplateService templateService = new WxMaTemplateServiceImpl(this);
   private final WxMaAnalysisService analysisService = new WxMaAnalysisServiceImpl(this);
   private final WxMaCodeService codeService = new WxMaCodeServiceImpl(this);
   private final WxMaSettingService settingService = new WxMaSettingServiceImpl(this);
@@ -57,6 +58,8 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
   private final WxMaCloudService cloudService = new WxMaCloudServiceImpl(this);
   private final WxMaLiveService liveService = new WxMaLiveServiceImpl(this);
   private final WxMaLiveGoodsService liveGoodsService = new WxMaLiveGoodsServiceImpl(this);
+  private final WxOcrService ocrService = new WxMaOcrServiceImpl(this);
+  private final WxImgProcService imgProcService = new WxMaImgProcServiceImpl(this);
 
   private int retrySleepMillis = 1000;
   private int maxRetryTimes = 5;
@@ -92,7 +95,7 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
       throw new WxErrorException(error);
     }
 
-    return JSON_PARSER.parse(responseContent).getAsJsonObject().get("unionid").getAsString();
+    return GsonParser.parse(responseContent).get("unionid").getAsString();
   }
 
   @Override
@@ -163,8 +166,8 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
   /**
    * 通过网络请求获取AccessToken
    *
-   * @return
-   * @throws IOException
+   * @return .
+   * @throws IOException .
    */
   protected abstract String doGetAccessTokenRequest() throws IOException;
 
@@ -238,12 +241,7 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
       return result;
     } catch (WxErrorException e) {
       WxError error = e.getError();
-      /*
-       * 发生以下情况时尝试刷新access_token
-       */
-      if (error.getErrorCode() == ERR_40001
-        || error.getErrorCode() == ERR_42001
-        || error.getErrorCode() == ERR_40014) {
+      if (WxConsts.ACCESS_TOKEN_ERROR_CODES.contains(error.getErrorCode())) {
         // 强制设置WxMaConfig的access token过期了，这样在下一次请求里就会刷新access token
         Lock lock = this.getWxMaConfig().getAccessTokenLock();
         lock.lock();
@@ -257,6 +255,7 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
           lock.unlock();
         }
         if (this.getWxMaConfig().autoRefreshToken()) {
+          log.warn("即将重新获取新的access_token，错误代码：{}，错误信息：{}", error.getErrorCode(), error.getErrorMsg());
           return this.execute(executor, uri, data);
         }
       }
@@ -275,9 +274,9 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
   /**
    * 设置当前的AccessToken
    *
-   * @param resultContent
-   * @return
-   * @throws WxErrorException
+   * @param resultContent 响应内容
+   * @return access token
+   * @throws WxErrorException 异常
    */
   protected String extractAccessToken(String resultContent) throws WxErrorException {
     WxMaConfig config = this.getWxMaConfig();
@@ -292,13 +291,81 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
 
   @Override
   public WxMaConfig getWxMaConfig() {
-    return this.wxMaConfig;
+    if (this.configMap.size() == 1) {
+      // 只有一个小程序，直接返回其配置即可
+      return this.configMap.values().iterator().next();
+    }
+
+    return this.configMap.get(WxMaConfigHolder.get());
   }
 
   @Override
-  public void setWxMaConfig(WxMaConfig wxConfigProvider) {
-    this.wxMaConfig = wxConfigProvider;
+  public void setWxMaConfig(WxMaConfig maConfig) {
+    final String appid = maConfig.getAppid();
+    this.setMultiConfigs(ImmutableMap.of(appid, maConfig), appid);
+  }
+
+  @Override
+  public void setMultiConfigs(Map<String, WxMaConfig> configs) {
+    this.setMultiConfigs(configs, configs.keySet().iterator().next());
+  }
+
+  @Override
+  public void setMultiConfigs(Map<String, WxMaConfig> configs, String defaultMiniappId) {
+    this.configMap = Maps.newHashMap(configs);
+    WxMaConfigHolder.set(defaultMiniappId);
     this.initHttp();
+  }
+
+  @Override
+  public void addConfig(String mpId, WxMaConfig configStorages) {
+    synchronized (this) {
+      if (this.configMap == null) {
+        this.setWxMaConfig(configStorages);
+      } else {
+        this.configMap.put(mpId, configStorages);
+      }
+    }
+  }
+
+  @Override
+  public void removeConfig(String miniappId) {
+    synchronized (this) {
+      if (this.configMap.size() == 1) {
+        this.configMap.remove(miniappId);
+        log.warn("已删除最后一个小程序配置：{}，须立即使用setWxMaConfig或setMultiConfigs添加配置", miniappId);
+        return;
+      }
+      if (WxMaConfigHolder.get().equals(miniappId)) {
+        this.configMap.remove(miniappId);
+        final String defaultMpId = this.configMap.keySet().iterator().next();
+        WxMaConfigHolder.set(defaultMpId);
+        log.warn("已删除默认小程序配置，小程序【{}】被设为默认配置", defaultMpId);
+        return;
+      }
+      this.configMap.remove(miniappId);
+    }
+  }
+
+  @Override
+  public WxMaService switchoverTo(String miniappId) {
+    if (this.configMap.containsKey(miniappId)) {
+      WxMaConfigHolder.set(miniappId);
+      return this;
+    }
+
+    throw new RuntimeException(String.format("无法找到对应【%s】的小程序配置信息，请核实！", miniappId));
+  }
+
+  @Override
+  public boolean switchover(String mpId) {
+    if (this.configMap.containsKey(mpId)) {
+      WxMaConfigHolder.set(mpId);
+      return true;
+    }
+
+    log.error("无法找到对应【{}】的小程序配置信息，请核实！", mpId);
+    return false;
   }
 
   @Override
@@ -329,11 +396,6 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
   @Override
   public WxMaQrcodeService getQrcodeService() {
     return this.qrCodeService;
-  }
-
-  @Override
-  public WxMaTemplateService getTemplateService() {
-    return this.templateService;
   }
 
   @Override
@@ -399,6 +461,16 @@ public abstract class BaseWxMaServiceImpl<H, P> implements WxMaService, RequestH
   @Override
   public WxMaLiveGoodsService getLiveGoodsService() {
     return this.liveGoodsService;
+  }
+
+  @Override
+  public WxOcrService getOcrService() {
+    return this.ocrService;
+  }
+
+  @Override
+  public WxImgProcService getImgProcService() {
+    return this.imgProcService;
   }
 
 }
