@@ -99,9 +99,14 @@ public class WxCpConsts {
     public static final String CHANGE_EXTERNAL_CONTACT = "change_external_contact";
 
     /**
-     * 企业微信审批事件推送
+     * 企业微信审批事件推送（自建应用审批）
      */
     public static final String OPEN_APPROVAL_CHANGE = "open_approval_change";
+
+    /**
+     * 企业微信审批事件推送（系统审批）
+     */
+    public static final String SYS_APPROVAL_CHANGE = "sys_approval_change";
 
     /**
      * 修改日历事件
@@ -308,5 +313,25 @@ public class WxCpConsts {
      * markdown消息.
      */
     public static final String MARKDOWN = "markdown";
+  }
+
+  @UtilityClass
+  public static class WorkBenchType {
+    /*
+    * 关键数据型
+    * */
+    public static final String KEYDATA = "keydata";
+    /*
+    * 图片型
+    * */
+    public static final String IMAGE = "image";
+    /*
+    * 列表型
+    * */
+    public static final String LIST = "list";
+    /*
+    * webview型
+    * */
+    public static final String WEBVIEW = "webview";
   }
 }

@@ -22,6 +22,7 @@ public class WxCpUser implements Serializable {
   private static final long serialVersionUID = -5696099236344075582L;
 
   private String userId;
+  private String newUserId;
   private String name;
   private Long[] departIds;
   private Integer[] orders;
@@ -33,6 +34,10 @@ public class WxCpUser implements Serializable {
   private String avatar;
   private String thumbAvatar;
   private String mainDepartment;
+  /**
+   * 全局唯一。对于同一个服务商，不同应用获取到企业内同一个成员的open_userid是相同的，最多64个字节。仅第三方应用可获取
+   */
+  private String openUserId;
 
   /**
    * 地址。长度最大128个字符

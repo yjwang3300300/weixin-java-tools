@@ -55,6 +55,13 @@ public final class WxCpApiPathConsts {
   }
 
   @UtilityClass
+  public static class WorkBench {
+    public static final String WORKBENCH_TEMPLATE_SET = "/cgi-bin/agent/set_workbench_template";
+    public static final String WORKBENCH_TEMPLATE_GET = "/cgi-bin/agent/get_workbench_template";
+    public static final String WORKBENCH_DATA_SET = "/cgi-bin/agent/set_workbench_data";
+  }
+
+  @UtilityClass
   public static class OAuth2 {
     public static final String GET_USER_INFO = "/cgi-bin/user/getuserinfo?code=%s&agentid=%d";
     public static final String GET_USER_DETAIL = "/cgi-bin/user/getuserdetail";
@@ -106,6 +113,14 @@ public final class WxCpApiPathConsts {
     public static final String CALENDAR_UPDATE = "/cgi-bin/oa/calendar/update";
     public static final String CALENDAR_GET = "/cgi-bin/oa/calendar/get";
     public static final String CALENDAR_DEL = "/cgi-bin/oa/calendar/del";
+
+    public static final String SCHEDULE_ADD = "/cgi-bin/oa/schedule/add";
+    public static final String SCHEDULE_UPDATE = "/cgi-bin/oa/schedule/update";
+    public static final String SCHEDULE_GET = "/cgi-bin/oa/schedule/get";
+    public static final String SCHEDULE_DEL = "/cgi-bin/oa/schedule/del";
+    public static final String SCHEDULE_LIST = "/cgi-bin/oa/schedule/get_by_calendar";
+
+    public static final String COPY_TEMPLATE = "/cgi-bin/oa/approval/copytemplate";
   }
 
   @UtilityClass
@@ -133,6 +148,16 @@ public final class WxCpApiPathConsts {
     public static final String GET_PROVIDER_TOKEN = "/cgi-bin/service/get_provider_token";
     public static final String GET_PREAUTH_CODE = "/cgi-bin/service/get_pre_auth_code";
     public static final String GET_AUTH_INFO = "/cgi-bin/service/get_auth_info";
+    public static final String GET_AUTH_CORP_JSAPI_TICKET = "/cgi-bin/get_jsapi_ticket";
+    public static final String GET_SUITE_JSAPI_TICKET = "/cgi-bin/ticket/get";
+    public static final String GET_USERINFO3RD = "/cgi-bin/service/getuserinfo3rd";
+    public static final String GET_USERDETAIL3RD = "/cgi-bin/service/getuserdetail3rd";
+    public static final String GET_LOGIN_INFO = "/cgi-bin/service/get_login_info";
+
+
+    public static final String CONTACT_SEARCH = "/cgi-bin/service/contact/search";
+    public static final String GET_ADMIN_LIST = "/cgi-bin/service/get_admin_list";
+
   }
 
   @UtilityClass
@@ -150,6 +175,7 @@ public final class WxCpApiPathConsts {
     public static final String USER_CONVERT_TO_USERID = "/cgi-bin/user/convert_to_userid";
     public static final String GET_USER_ID = "/cgi-bin/user/getuserid";
     public static final String GET_EXTERNAL_CONTACT = "/cgi-bin/crm/get_external_contact?external_userid=";
+    public static final String GET_JOIN_QR_CODE = "/cgi-bin/corp/get_join_qrcode?size_type=";
   }
 
   @UtilityClass
@@ -164,6 +190,7 @@ public final class WxCpApiPathConsts {
     public static final String CLOSE_TEMP_CHAT = "/cgi-bin/externalcontact/close_temp_chat";
     public static final String GET_FOLLOW_USER_LIST = "/cgi-bin/externalcontact/get_follow_user_list";
     public static final String GET_CONTACT_DETAIL = "/cgi-bin/externalcontact/get?external_userid=";
+    public static final String GET_CONTACT_DETAIL_BATCH = "/cgi-bin/externalcontact/batch/get_by_user?";
     public static final String UPDATE_REMARK = "/cgi-bin/externalcontact/remark";
     public static final String LIST_EXTERNAL_CONTACT = "/cgi-bin/externalcontact/list?userid=";
     public static final String LIST_UNASSIGNED_CONTACT = "/cgi-bin/externalcontact/get_unassigned_list";

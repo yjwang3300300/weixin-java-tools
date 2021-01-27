@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
-<project
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-  xmlns="http://maven.apache.org/POM/4.0.0">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.binarywang</groupId>
   <artifactId>wx-java</artifactId>
-  <version>3.9.3.B</version>
+  <version>4.0.3.B</version>
   <packaging>pom</packaging>
   <name>WxJava - Weixin/Wechat Java SDK</name>
   <description>微信开发Java SDK</description>
@@ -111,6 +108,7 @@
     <module>weixin-java-pay</module>
     <module>weixin-java-miniapp</module>
     <module>weixin-java-open</module>
+    <module>weixin-java-qidian</module>
     <module>spring-boot-starters</module>
     <!--module>weixin-java-osgi</module-->
   </modules>
@@ -121,7 +119,7 @@
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <httpclient.version>4.5</httpclient.version>
-    <jetty.version>9.4.31.v20200723</jetty.version>
+    <jetty.version>9.4.35.v20201120</jetty.version>
   </properties>
 
   <dependencyManagement>
@@ -134,7 +132,7 @@
       <dependency>
         <groupId>org.jodd</groupId>
         <artifactId>jodd-http</artifactId>
-        <version>5.1.6</version>
+        <version>5.2.0</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -177,7 +175,7 @@
       <dependency>
         <groupId>com.thoughtworks.xstream</groupId>
         <artifactId>xstream</artifactId>
-        <version>1.4.11.1</version>
+        <version>1.4.15</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>

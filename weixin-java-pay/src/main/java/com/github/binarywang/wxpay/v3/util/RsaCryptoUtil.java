@@ -2,6 +2,7 @@ package com.github.binarywang.wxpay.v3.util;
 
 import com.github.binarywang.wxpay.exception.WxPayException;
 import com.github.binarywang.wxpay.v3.SpecEncrypt;
+import me.chanjar.weixin.common.error.WxRuntimeException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -14,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Collection;
 
 /**
  * 微信支付敏感信息加密
@@ -52,8 +54,18 @@ public class RsaCryptoUtil {
         } else {
           field.setAccessible(true);
           Object obj = field.get(encryptObject);
-          if (obj != null) {
-            encryptField(field.get(encryptObject), certificate);
+          if (obj == null) {
+            continue;
+          }
+          if (obj instanceof Collection) {
+            Collection collection = (Collection) obj;
+            for (Object o : collection) {
+              if (o != null) {
+                encryptField(o, certificate);
+              }
+            }
+          } else {
+            encryptField(obj, certificate);
           }
         }
       }
@@ -70,7 +82,7 @@ public class RsaCryptoUtil {
       byte[] ciphertext = cipher.doFinal(data);
       return Base64.getEncoder().encodeToString(ciphertext);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-      throw new RuntimeException("当前Java环境不支持RSA v1.5/OAEP", e);
+      throw new WxRuntimeException("当前Java环境不支持RSA v1.5/OAEP", e);
     } catch (InvalidKeyException e) {
       throw new IllegalArgumentException("无效的证书", e);
     } catch (IllegalBlockSizeException | BadPaddingException e) {
@@ -87,7 +99,7 @@ public class RsaCryptoUtil {
       byte[] data = Base64.getDecoder().decode(ciphertext);
       return new String(cipher.doFinal(data), StandardCharsets.UTF_8);
     } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
-      throw new RuntimeException("当前Java环境不支持RSA v1.5/OAEP", e);
+      throw new WxRuntimeException("当前Java环境不支持RSA v1.5/OAEP", e);
     } catch (InvalidKeyException e) {
       throw new IllegalArgumentException("无效的私钥", e);
     } catch (BadPaddingException | IllegalBlockSizeException e) {

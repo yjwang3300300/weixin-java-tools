@@ -1,6 +1,7 @@
 package com.github.binarywang.wxpay.service.impl;
 
 import com.github.binarywang.wxpay.bean.ecommerce.*;
+import com.github.binarywang.wxpay.bean.ecommerce.enums.FundBillTypeEnum;
 import com.github.binarywang.wxpay.bean.ecommerce.enums.SpAccountTypeEnum;
 import com.github.binarywang.wxpay.bean.ecommerce.enums.TradeTypeEnum;
 import com.github.binarywang.wxpay.exception.WxPayException;
@@ -8,15 +9,22 @@ import com.github.binarywang.wxpay.service.EcommerceService;
 import com.github.binarywang.wxpay.service.WxPayService;
 import com.github.binarywang.wxpay.v3.util.AesUtils;
 import com.github.binarywang.wxpay.v3.util.RsaCryptoUtil;
+import com.google.common.base.CaseFormat;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.commons.lang3.StringUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.beanutils.BeanMap;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @RequiredArgsConstructor
 public class EcommerceServiceImpl implements EcommerceService {
@@ -143,6 +151,12 @@ public class EcommerceServiceImpl implements EcommerceService {
   }
 
   @Override
+  public void closePartnerTransactions(PartnerTransactionsCloseRequest request) throws WxPayException {
+    String url = String.format("%s/v3/pay/partner/transactions/out-trade-no/%s/close", this.payService.getPayBaseUrl(), request.getOutTradeNo());
+    String response = this.payService.postV3(url, GSON.toJson(request));
+  }
+
+  @Override
   public FundBalanceResult spNowBalance(SpAccountTypeEnum accountType) throws WxPayException {
     String url = String.format("%s/v3/merchant/fund/balance/%s", this.payService.getPayBaseUrl(), accountType);
     URI uri = URI.create(url);
@@ -177,7 +191,8 @@ public class EcommerceServiceImpl implements EcommerceService {
   @Override
   public ProfitSharingResult profitSharing(ProfitSharingRequest request) throws WxPayException {
     String url = String.format("%s/v3/ecommerce/profitsharing/orders", this.payService.getPayBaseUrl());
-    String response = this.payService.postV3(url, GSON.toJson(request));
+    RsaCryptoUtil.encryptFields(request, this.payService.getConfig().getVerifier().getValidCertificate());
+    String response = this.payService.postV3WithWechatpaySerial(url, GSON.toJson(request));
     return GSON.fromJson(response, ProfitSharingResult.class);
   }
 
@@ -190,9 +205,41 @@ public class EcommerceServiceImpl implements EcommerceService {
   }
 
   @Override
+  public ProfitSharingReceiverResult addReceivers(ProfitSharingReceiverRequest request) throws WxPayException {
+    String url = String.format("%s/v3/ecommerce/profitsharing/receivers/add", this.payService.getPayBaseUrl());
+    String response = this.payService.postV3(url, GSON.toJson(request));
+    return GSON.fromJson(response, ProfitSharingReceiverResult.class);
+  }
+
+  @Override
+  public ProfitSharingReceiverResult deleteReceivers(ProfitSharingReceiverRequest request) throws WxPayException {
+    String url = String.format("%s/v3/ecommerce/profitsharing/receivers/delete", this.payService.getPayBaseUrl());
+    String response = this.payService.postV3(url, GSON.toJson(request));
+    return GSON.fromJson(response, ProfitSharingReceiverResult.class);
+  }
+
+  @Override
   public ReturnOrdersResult returnOrders(ReturnOrdersRequest request) throws WxPayException {
     String url = String.format("%s/v3/ecommerce/profitsharing/returnorders", this.payService.getPayBaseUrl());
     String response = this.payService.postV3(url, GSON.toJson(request));
+    return GSON.fromJson(response, ReturnOrdersResult.class);
+  }
+
+  @Override
+  public ReturnOrdersResult queryReturnOrders(ReturnOrdersQueryRequest request) throws WxPayException {
+    String subMchid = request.getSubMchid();
+    String orderId = request.getOrderId();
+    String outOrderNo = request.getOutOrderNo();
+    String outReturnNo = request.getOutReturnNo();
+    String url = null;
+    if (StringUtils.isBlank(orderId)) {
+      url = String.format("%s/v3/ecommerce/profitsharing/returnorders?sub_mchid=%s&out_order_no=%s&out_return_no=%s",
+        this.payService.getPayBaseUrl(), subMchid, outOrderNo, outReturnNo);
+    } else {
+      url = String.format("%s/v3/ecommerce/profitsharing/returnorders?sub_mchid=%s&order_id=%s&out_return_no=%s",
+        this.payService.getPayBaseUrl(), subMchid, orderId, outReturnNo);
+    }
+    String response = this.payService.getV3(URI.create(url));
     return GSON.fromJson(response, ReturnOrdersResult.class);
   }
 
@@ -219,7 +266,7 @@ public class EcommerceServiceImpl implements EcommerceService {
 
   @Override
   public RefundQueryResult queryRefundByOutRefundNo(String subMchid, String outRefundNo) throws WxPayException {
-    String url = String.format("%s/v3/ecommerce/applyments/out-request-no/%s?sub_mchid=%s", this.payService.getPayBaseUrl(), outRefundNo, subMchid);
+    String url = String.format("%s/v3/ecommerce/refunds/out-refund-no/%s?sub_mchid=%s", this.payService.getPayBaseUrl(), outRefundNo, subMchid);
     String response = this.payService.getV3(URI.create(url));
     return GSON.fromJson(response, RefundQueryResult.class);
   }
@@ -260,6 +307,20 @@ public class EcommerceServiceImpl implements EcommerceService {
   }
 
   @Override
+  public SubWithdrawStatusResult querySubWithdrawByOutRequestNo(String subMchid, String outRequestNo) throws WxPayException {
+    String url = String.format("%s/v3/ecommerce/fund/withdraw/out-request-no/%s?sub_mchid=%s", this.payService.getPayBaseUrl(), outRequestNo, subMchid);
+    String response = this.payService.getV3(URI.create(url));
+    return GSON.fromJson(response, SubWithdrawStatusResult.class);
+  }
+
+  @Override
+  public SpWithdrawStatusResult querySpWithdrawByOutRequestNo(String outRequestNo) throws WxPayException {
+    String url = String.format("%s/v3/merchant/fund/withdraw/out-request-no/%s", this.payService.getPayBaseUrl(), outRequestNo);
+    String response = this.payService.getV3(URI.create(url));
+    return GSON.fromJson(response, SpWithdrawStatusResult.class);
+  }
+
+  @Override
   public void modifySettlement(String subMchid, SettlementRequest request) throws WxPayException {
     String url = String.format("%s/v3/apply4sub/sub_merchants/%s/modify-settlement", this.payService.getPayBaseUrl(), subMchid);
     RsaCryptoUtil.encryptFields(request, this.payService.getConfig().getVerifier().getValidCertificate());
@@ -271,6 +332,25 @@ public class EcommerceServiceImpl implements EcommerceService {
     String url = String.format("%s/v3/apply4sub/sub_merchants/%s/settlement", this.payService.getPayBaseUrl(), subMchid);
     String response = this.payService.getV3(URI.create(url));
     return GSON.fromJson(response, SettlementResult.class);
+  }
+
+  @Override
+  public TradeBillResult applyBill(TradeBillRequest request) throws WxPayException {
+    String url = String.format("%s/v3/bill/tradebill?%s", this.payService.getPayBaseUrl(), this.parseURLPair(request));
+    String response = this.payService.getV3(URI.create(url));
+    return GSON.fromJson(response, TradeBillResult.class);
+  }
+
+  @Override
+  public FundBillResult applyFundBill(FundBillTypeEnum billType, FundBillRequest request) throws WxPayException {
+    String url = String.format(billType.getUrl(), this.payService.getPayBaseUrl(), this.parseURLPair(request));
+    String response = this.payService.getV3(URI.create(url));
+    return GSON.fromJson(response, FundBillResult.class);
+  }
+
+  @Override
+  public InputStream downloadBill(String url) throws WxPayException {
+    return this.payService.downloadV3(URI.create(url));
   }
 
   /**
@@ -287,4 +367,24 @@ public class EcommerceServiceImpl implements EcommerceService {
     return payService.getConfig().getVerifier().verify(header.getSerialNo(),
       beforeSign.getBytes(StandardCharsets.UTF_8), header.getSigned());
   }
-}
+
+  /**
+   * 对象拼接到url
+   * @param o 转换对象
+   * @return  拼接好的string
+   */
+  private String parseURLPair(Object o) {
+    Map<Object, Object> map = new BeanMap(o);
+    Set<Map.Entry<Object, Object>> set = map.entrySet();
+    Iterator<Map.Entry<Object, Object>> it = set.iterator();
+    StringBuilder sb = new StringBuilder();
+    while (it.hasNext()) {
+      Map.Entry<Object, Object> e = it.next();
+      if ( !"class".equals(e.getKey()) && e.getValue() != null)
+        sb.append(CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, String.valueOf(e.getKey()))).append("=").append(e.getValue()).append("&");
+    }
+    return sb.deleteCharAt(sb.length() - 1).toString();
+  }
+
+
+  }

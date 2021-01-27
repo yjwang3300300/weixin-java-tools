@@ -2,6 +2,7 @@ package me.chanjar.weixin.cp.api;
 
 import me.chanjar.weixin.common.bean.WxJsapiSignature;
 import me.chanjar.weixin.common.error.WxErrorException;
+import me.chanjar.weixin.common.service.WxService;
 import me.chanjar.weixin.common.session.WxSession;
 import me.chanjar.weixin.common.session.WxSessionManager;
 import me.chanjar.weixin.common.util.http.MediaUploadRequestExecutor;
@@ -16,7 +17,7 @@ import me.chanjar.weixin.cp.config.WxCpConfigStorage;
  *
  * @author chanjaster
  */
-public interface WxCpService {
+public interface WxCpService extends WxService {
   /**
    * <pre>
    * 验证推送过来的消息的正确性
@@ -36,7 +37,7 @@ public interface WxCpService {
    *
    * @return the access token
    * @throws WxErrorException the wx error exception
-   * @see #getAccessToken(boolean) #getAccessToken(boolean)
+   * @see #getAccessToken(boolean) #getAccessToken(boolean)#getAccessToken(boolean)
    */
   String getAccessToken() throws WxErrorException;
 
@@ -60,7 +61,7 @@ public interface WxCpService {
    *
    * @return the jsapi ticket
    * @throws WxErrorException the wx error exception
-   * @see #getJsapiTicket(boolean) #getJsapiTicket(boolean)
+   * @see #getJsapiTicket(boolean) #getJsapiTicket(boolean)#getJsapiTicket(boolean)
    */
   String getJsapiTicket() throws WxErrorException;
 
@@ -87,7 +88,7 @@ public interface WxCpService {
    *
    * @return the agent jsapi ticket
    * @throws WxErrorException the wx error exception
-   * @see #getJsapiTicket(boolean) #getJsapiTicket(boolean)
+   * @see #getJsapiTicket(boolean) #getJsapiTicket(boolean)#getJsapiTicket(boolean)
    */
   String getAgentJsapiTicket() throws WxErrorException;
 
@@ -158,26 +159,6 @@ public interface WxCpService {
    * @throws WxErrorException .
    */
   WxCpProviderToken getProviderToken(String corpId, String providerSecret) throws WxErrorException;
-
-  /**
-   * 当本Service没有实现某个API的时候，可以用这个，针对所有微信API中的GET请求
-   *
-   * @param url        接口地址
-   * @param queryParam 请求参数
-   * @return the string
-   * @throws WxErrorException the wx error exception
-   */
-  String get(String url, String queryParam) throws WxErrorException;
-
-  /**
-   * 当本Service没有实现某个API的时候，可以用这个，针对所有微信API中的POST请求
-   *
-   * @param url      接口地址
-   * @param postData 请求body字符串
-   * @return the string
-   * @throws WxErrorException the wx error exception
-   */
-  String post(String url, String postData) throws WxErrorException;
 
   /**
    * 当不需要自动带accessToken的时候，可以用这个发起post请求
@@ -393,9 +374,16 @@ public interface WxCpService {
   /**
    * 获取日历相关接口的服务类对象
    *
-   * @return the menu service
+   * @return the oa calendar service
    */
   WxCpOaCalendarService getOaCalendarService();
+
+  /**
+   * 获取日程相关接口的服务类对象
+   *
+   * @return the oa schedule service
+   */
+  WxCpOaScheduleService getOaScheduleService();
 
   /**
    * 获取群机器人消息推送服务
@@ -403,6 +391,13 @@ public interface WxCpService {
    * @return 群机器人消息推送服务 group robot service
    */
   WxCpGroupRobotService getGroupRobotService();
+
+  /**
+   * 获取工作台服务
+   *
+   * @return the workbench service
+   */
+  WxCpAgentWorkBenchService getWorkBenchService();
 
   /**
    * http请求对象

@@ -1,7 +1,9 @@
 package me.chanjar.weixin.cp.api.impl;
 
 import com.google.common.collect.Maps;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 import lombok.RequiredArgsConstructor;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -10,7 +12,7 @@ import me.chanjar.weixin.cp.api.WxCpService;
 import me.chanjar.weixin.cp.api.WxCpUserService;
 import me.chanjar.weixin.cp.bean.WxCpInviteResult;
 import me.chanjar.weixin.cp.bean.WxCpUser;
-import me.chanjar.weixin.cp.bean.external.WxCpUserExternalContactInfo;
+import me.chanjar.weixin.cp.bean.external.contact.WxCpExternalContactInfo;
 import me.chanjar.weixin.cp.util.json.WxCpGsonBuilder;
 
 import java.util.List;
@@ -193,9 +195,17 @@ public class WxCpUserServiceImpl implements WxCpUserService {
   }
 
   @Override
-  public WxCpUserExternalContactInfo getExternalContact(String userId) throws WxErrorException {
+  public WxCpExternalContactInfo getExternalContact(String userId) throws WxErrorException {
     String url = this.mainService.getWxCpConfigStorage().getApiUrl(GET_EXTERNAL_CONTACT + userId);
     String responseContent = this.mainService.get(url, null);
-    return WxCpUserExternalContactInfo.fromJson(responseContent);
+    return WxCpExternalContactInfo.fromJson(responseContent);
+  }
+
+  @Override
+  public String getJoinQrCode(int sizeType) throws WxErrorException {
+    String url = this.mainService.getWxCpConfigStorage().getApiUrl(GET_JOIN_QR_CODE + sizeType);
+    String responseContent = this.mainService.get(url, null);
+    JsonObject tmpJson = GsonParser.parse(responseContent);
+    return tmpJson.get("join_qrcode").getAsString();
   }
 }
